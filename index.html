@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>לפני שמתקינים — מדריך מעשי לבדיקת תוכנות לא מוכרות</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Arial, sans-serif;
+      --bg: #08101d;
+      --panel: #111c2d;
+      --panel-2: #16243a;
+      --line: #293d5d;
+      --text: #eef4ff;
+      --muted: #bdcbe2;
+      --blue: #72a8ff;
+      --green: #70d69b;
+      --amber: #ffc866;
+      --red: #ff8585;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 85% 0%, #193865 0, transparent 30rem),
+        linear-gradient(180deg, var(--bg), #0b1422 42%, #09111e);
+      color: var(--text);
+    }
+    body.modal-open { overflow: hidden; }
+    .download-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: #020711d9;
+      backdrop-filter: blur(8px);
+    }
+    .download-modal[hidden] { display: none; }
+    .download-modal-card {
+      width: min(520px, 100%);
+      padding: 30px;
+      border: 1px solid #8b6427;
+      border-radius: 22px;
+      background: linear-gradient(145deg, #2d2412, #111c2d 72%);
+      box-shadow: 0 28px 90px #000b;
+      text-align: center;
+    }
+    .download-modal-icon {
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      margin: 0 auto 18px;
+      border-radius: 50%;
+      background: #ffc8661f;
+      border: 1px solid #ffc86666;
+      color: var(--amber);
+      font-size: 30px;
+      font-weight: 900;
+    }
+    .download-modal h2 { margin: 0 0 12px; font-size: 29px; }
+    .download-modal p { margin: 0 0 22px; font-size: 18px; }
+    .download-modal button {
+      width: 100%;
+      padding: 14px 20px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--amber);
+      color: #171008;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .download-modal button:hover { background: #ffd98e; }
+    .download-modal button:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+    a { color: #9fc3ff; }
+    a:hover { color: white; }
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(14px);
+      background: #08101de6;
+      border-bottom: 1px solid #263852;
+    }
+    .nav {
+      width: min(1120px, calc(100% - 32px));
+      margin: auto;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand { color: white; font-weight: 800; text-decoration: none; }
+    .nav-links { display: flex; flex-wrap: wrap; gap: 15px; font-size: 14px; }
+    .nav-links a { color: var(--muted); text-decoration: none; }
+    main, footer {
+      width: min(1120px, calc(100% - 32px));
+      margin-inline: auto;
+    }
+    .hero {
+      padding: 84px 0 46px;
+      display: grid;
+      grid-template-columns: 1.35fr .65fr;
+      gap: 34px;
+      align-items: center;
+    }
+    .eyebrow {
+      display: inline-flex;
+      padding: 7px 11px;
+      border: 1px solid #466a9d;
+      border-radius: 999px;
+      color: #b8d3ff;
+      background: #142643;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    h1 {
+      margin: 20px 0 18px;
+      max-width: 780px;
+      font-size: clamp(38px, 7vw, 72px);
+      line-height: 1.03;
+      letter-spacing: -2px;
+    }
+    .lead { max-width: 760px; font-size: 20px; line-height: 1.75; color: #d2def2; }
+    .hero-note {
+      padding: 24px;
+      border: 1px solid #45638e;
+      border-radius: 22px;
+      background: linear-gradient(145deg, #172b49, #111c2d);
+      box-shadow: 0 24px 70px #0006;
+    }
+    .hero-note strong { display: block; font-size: 40px; color: var(--amber); margin-bottom: 10px; }
+    section { padding: 42px 0; scroll-margin-top: 80px; }
+    section > h2 { margin: 0 0 13px; font-size: clamp(28px, 4vw, 42px); }
+    .section-intro { max-width: 850px; margin: 0 0 25px; font-size: 18px; color: var(--muted); line-height: 1.75; }
+    p, li { line-height: 1.75; color: var(--muted); }
+    .demo {
+      padding: 28px;
+      border: 1px solid #825c29;
+      border-radius: 22px;
+      background: linear-gradient(145deg, #2d2412, #171b25 68%);
+      box-shadow: 0 18px 50px #0004;
+    }
+    .demo h2 { margin-top: 0; }
+    .notice {
+      padding: 15px 17px;
+      border-radius: 12px;
+      background: #3a2911;
+      border: 1px solid #8b6427;
+      color: #ffe5b1;
+      line-height: 1.65;
+    }
+    #status {
+      min-height: 52px;
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: #0b1422;
+      border: 1px solid #293c5c;
+      color: #d9e6fa;
+      line-height: 1.6;
+    }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .grid.two { grid-template-columns: repeat(2, 1fr); }
+    .card {
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: linear-gradient(150deg, var(--panel-2), var(--panel));
+    }
+    .card h3 { margin: 0 0 9px; font-size: 20px; color: white; }
+    .card p { margin-bottom: 0; }
+    .number {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      background: #254f88;
+      color: white;
+      font-weight: 800;
+    }
+    .risk { border-top: 3px solid var(--red); }
+    .good { border-top: 3px solid var(--green); }
+    .myth { border-top: 3px solid var(--amber); }
+    .checklist { display: grid; gap: 12px; padding: 0; list-style: none; counter-reset: safe-steps; }
+    .checklist li {
+      counter-increment: safe-steps;
+      position: relative;
+      padding: 18px 64px 18px 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #101b2c;
+    }
+    .checklist li::before {
+      content: counter(safe-steps);
+      position: absolute;
+      right: 17px;
+      top: 17px;
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #285a9a;
+      color: white;
+      font-weight: 800;
+    }
+    .checklist strong { color: white; }
+    .code-block {
+      position: relative;
+      direction: ltr;
+      text-align: left;
+      overflow-x: auto;
+      margin: 12px 0 0;
+      padding: 18px;
+      border: 1px solid #334d73;
+      border-radius: 12px;
+      background: #07101c;
+      color: #c7e0ff;
+      font: 14px/1.7 Consolas, monospace;
+      white-space: pre;
+    }
+    .comparison { width: 100%; border-collapse: collapse; background: #101b2c; border-radius: 15px; overflow: hidden; }
+    .comparison th, .comparison td { padding: 15px; text-align: right; vertical-align: top; border-bottom: 1px solid #293b58; }
+    .comparison th { color: white; background: #182842; }
+    .comparison td { color: var(--muted); line-height: 1.6; }
+    .callout {
+      padding: 20px 22px;
+      border-right: 4px solid var(--blue);
+      border-radius: 10px;
+      background: #12223a;
+      color: #dce9fc;
+      line-height: 1.75;
+    }
+    .sources { display: grid; gap: 12px; }
+    .sources a {
+      display: block;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #101b2c;
+      text-decoration: none;
+    }
+    footer { padding: 35px 0 70px; color: #8293ad; border-top: 1px solid #263852; }
+    code { direction: ltr; unicode-bidi: embed; color: #a9c7ff; }
+    @media (max-width: 820px) {
+      .hero { grid-template-columns: 1fr; padding-top: 55px; }
+      .grid, .grid.two { grid-template-columns: 1fr; }
+      .nav { align-items: flex-start; padding: 14px 0; }
+      .nav-links { justify-content: flex-end; }
+      .comparison { display: block; overflow-x: auto; }
+    }
+    @media (max-width: 560px) {
+      .nav-links { display: none; }
+      h1 { letter-spacing: -1px; }
+      .demo { padding: 21px; }
+    }
+  </style>
+</head>
+<body class="modal-open">
+  <div class="download-modal" id="downloadModal" role="dialog" aria-modal="true" aria-labelledby="downloadModalTitle" aria-describedby="downloadModalText">
+    <div class="download-modal-card">
+      <div class="download-modal-icon" aria-hidden="true">!</div>
+      <h2 id="downloadModalTitle">בדקו עכשיו את תיקיית ההורדות</h2>
+      <p id="downloadModalText">בדיקת האבטחה הופעלה. בדקו אם הופיע בתיקיית ההורדות קובץ בשם <code>security-warning.mp4</code>, ואז המשיכו לקרוא באתר.</p>
+      <button id="continueButton" type="button">בדקתי — המשך לקרוא</button>
+    </div>
+  </div>
+  <header class="site-header">
+    <nav class="nav" aria-label="ניווט ראשי">
+      <a class="brand" href="#top">לפני שמתקינים</a>
+      <div class="nav-links">
+        <a href="#demo">הדגמה</a>
+        <a href="#risks">הסכנות</a>
+        <a href="#workflow">תהליך בדיקה</a>
+        <a href="#windows">בדיקה ב־Windows</a>
+        <a href="#response">מה עושים בחשד</a>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <section class="hero" id="top">
+      <div>
+        <span class="eyebrow">פרויקט לימודי באבטחת מידע</span>
+        <h1>לחיצה אחת על “התקן” יכולה לשנות הרבה יותר ממה שרואים</h1>
+        <p class="lead">תוכנה לא מוכרת עשויה לקבל גישה לקבצים, לרשת, לדפדפן ולהפעלה האוטומטית של המחשב. המטרה כאן אינה להפחיד—אלא ללמד תהליך קצר ושיטתי שמקטין משמעותית את הסיכון לפני שמריצים קובץ.</p>
+      </div>
+      <aside class="hero-note">
+        <strong>עצור לרגע</strong>
+        <p>לפני שמריצים מתקין, כדאי לענות על ארבע שאלות: מי פרסם אותו? מאיפה הגיע? האם ניתן לאמת שלא שונה? ומה בדיוק הוא עומד לקבל הרשאה לעשות?</p>
+      </aside>
+    </section>
+
+    <section id="demo">
+      <div class="demo">
+        <span class="eyebrow">הדגמה חיה ומקומית</span>
+        <h2>מה תוכנה מקומית עלולה לאפשר לאתר לעשות?</h2>
+        <p>הדף שולח בקשת הורדה אחת לשירות שמותקן במחשב. יעד ההורדה קבוע, והקובץ מכיל טקסט אזהרה בלבד.</p>
+        <div class="notice">
+          אזהרה: מיד בטעינת הדף נשלחת אוטומטית בקשת בדיקה אחת, ללא לחיצה. אם הבדיקה מצליחה, אמור להופיע ב־Downloads קובץ בשם דומה ל־<code>security-warning.mp4</code>. למרות הסיומת, תוכנו הוא טקסט רגיל ולא וידאו.
+        </div>
+        <div id="status" role="status" aria-live="polite">טוען את בדיקת האבטחה...</div>
+        <p><strong>למה זו בעיה?</strong> שירות מקומי ללא אסימון אימות מתייחס לבקשה כאילו הגיעה מהתוסף המורשה, אף שאתר רגיל שלח אותה. הגבלת השירות למחשב עצמו מגינה מפני גישה ישירה ממחשב אחר, אך אינה מוכיחה מי יזם את הבקשה מתוך המחשב או הדפדפן.</p>
+      </div>
+    </section>
+
+    <section id="risks">
+      <h2>מה באמת יכול להשתבש?</h2>
+      <p class="section-intro">מתקין הוא תוכנה לכל דבר. אם נותנים לו הרשאות, הוא מסוגל לבצע כמעט כל פעולה שהמשתמש מסוגל לבצע—ולעתים יותר, אם מאשרים הרשאת מנהל.</p>
+      <div class="grid">
+        <article class="card risk"><h3>גניבת מידע</h3><p>קריאת מסמכים, קובצי דפדפן, ארנקים, אסימוני התחברות, תמונות או מידע עסקי והעברתם לשרת מרוחק.</p></article>
+        <article class="card risk"><h3>התמדה במחשב</h3><p>הוספת הפעלה אוטומטית, שירות, משימה מתוזמנת או תוסף דפדפן כדי שהתוכנה תחזור לפעול בכל אתחול.</p></article>
+        <article class="card risk"><h3>שליטה בדפדפן</h3><p>תוסף עם הרשאה לכל האתרים יכול לקרוא ולשנות דפים, לעקוב אחרי גלישה או להוסיף פעולות לא רצויות.</p></article>
+        <article class="card risk"><h3>הורדת קוד נוסף</h3><p>מתקין קטן יכול להיות רק שלב ראשון שמוריד רכיבים נוספים. עדכון אוטומטי ללא אימות מרחיב את שרשרת האמון.</p></article>
+        <article class="card risk"><h3>ניצול הרשת המקומית</h3><p>תוכנה יכולה לסרוק שירותים, לפנות לנתב או להתקנים פנימיים, או לפתוח שרת מקומי שאינו מוגן מספיק.</p></article>
+        <article class="card risk"><h3>פגיעה בזמינות</h3><p>כריית מטבעות, הצפנת קבצים, מילוי הדיסק, שינוי הגדרות אבטחה או ניצול משאבים ברקע.</p></article>
+      </div>
+    </section>
+
+    <section id="red-flags">
+      <h2>סימני אזהרה שכדאי לעצור בגללם</h2>
+      <div class="grid two">
+        <article class="card myth">
+          <h3>סימנים הקשורים למקור</h3>
+          <ul>
+            <li>קישור שהגיע בקבוצת הודעות, קיצור כתובת או אתר שמחקה שם מוכר.</li>
+            <li>אין אתר רשמי, שם חברה, היסטוריית גרסאות, מדיניות פרטיות או דרך יצירת קשר.</li>
+            <li>שם הקובץ והגרסה אינם תואמים למסמכים או לתיקייה.</li>
+            <li>הוראה לכבות אנטי־וירוס, SmartScreen או הגנות דפדפן כדי “שזה יעבוד”.</li>
+          </ul>
+        </article>
+        <article class="card myth">
+          <h3>סימנים הקשורים להתנהגות</h3>
+          <ul>
+            <li>התקנה שקטה לחלוטין, הפעלה אוטומטית או עדכון עצמי בלי הסבר.</li>
+            <li>בקשת הרשאות שאינן קשורות למטרה, למשל תוסף פשוט המבקש גישה לכל האתרים.</li>
+            <li>ביטול בדיקת תעודות HTTPS או הורדה ממקורות שאינם מאומתים.</li>
+            <li>אין מסיר התקנה, אין רשימת קבצים ואין הסבר אילו שינויים יבוצעו במערכת.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="workflow">
+      <h2>תהליך מומלץ לפני כל התקנה</h2>
+      <p class="section-intro">אף בדיקה יחידה אינה מספיקה. הביטחון מגיע מצירוף של מקור אמין, זהות מפרסם, שלמות הקובץ, סריקה והתנהגות סבירה.</p>
+      <ol class="checklist">
+        <li><strong>בדקו אם בכלל צריך את התוכנה.</strong> חפשו חלופה שכבר קיימת במערכת, בחנות הרשמית או אצל ספק מוכר. פחות תוכנות פירושו פחות שטח תקיפה.</li>
+        <li><strong>הגיעו למקור באופן עצמאי.</strong> הקלידו את כתובת היצרן או השתמשו בחנות רשמית. אל תסמכו רק על קישור שנשלח אליכם או על המודעה הראשונה בחיפוש.</li>
+        <li><strong>בדקו את זהות המפרסם.</strong> קראו על החברה, חפשו עמוד גרסאות ותיעוד, ובדקו האם שם החותם הדיגיטלי מתאים בדיוק לגוף שממנו התכוונתם להוריד.</li>
+        <li><strong>אמתו חתימה דיגיטלית.</strong> חתימה תקינה מקשרת את הקובץ למפרסם ומגלה שינוי לאחר החתימה. היא אינה מבטיחה שהתוכנה טובה—גם מפרסם אמיתי יכול לטעות או להיפרץ.</li>
+        <li><strong>השוו SHA-256.</strong> אם הספק מפרסם גיבוב בערוץ רשמי, חשבו גיבוב מקומי והשוו תו־לתו. גיבוב מוכיח שהעותק זהה; הוא מועיל רק אם הערך להשוואה הגיע ממקור אמין ונפרד.</li>
+        <li><strong>סרקו את הקובץ.</strong> עדכנו את האנטי־וירוס וסרקו את הקובץ או התיקייה. תוצאה נקייה מפחיתה חשד, אך אינה הוכחה מוחלטת—נוזקה חדשה עלולה עדיין לא להיות מזוהה.</li>
+        <li><strong>בדקו הרשאות ותכולה.</strong> שימו לב לבקשת מנהל, גישה לכל האתרים, הפעלה אוטומטית, פתיחת פורט, דרייבר או שינוי הגנות. בקובצי ZIP אפשר לעיין ברשימת הקבצים לפני הרצה.</li>
+        <li><strong>נסו בסביבה מבודדת.</strong> קובץ לא מוכר במיוחד יש לבדוק ב־Windows Sandbox או במכונה וירטואלית, רצוי בלי רשת ובלי תיקייה משותפת לכתיבה.</li>
+        <li><strong>הכינו דרך חזרה.</strong> תעדו את מיקום ההתקנה, מנגנוני ההפעלה האוטומטית ודרך ההסרה. גיבוי של קבצים חשובים עדיף על הסתמכות בלעדית על נקודת שחזור.</li>
+        <li><strong>עקבו אחרי ההתנהגות.</strong> לאחר התקנה, בדקו אם נוספו תהליכים, שירותים, תוספים או חיבורי רשת שלא ציפיתם להם. עדכנו רק דרך מנגנון מאומת.</li>
+      </ol>
+    </section>
+
+    <section id="windows">
+      <h2>בדיקות פשוטות ב־Windows</h2>
+      <p class="section-intro">אפשר לבצע את הבדיקות הבאות לפני הרצת הקובץ. החליפו את הנתיב בדוגמה בנתיב לקובץ שלכם.</p>
+      <div class="grid two">
+        <article class="card good">
+          <h3>בדיקת חתימה דיגיטלית</h3>
+          <p>אפשר ללחוץ לחיצה ימנית → מאפיינים → Digital Signatures. לחלופין, ב־PowerShell:</p>
+          <div class="code-block">Get-AuthenticodeSignature -LiteralPath "C:\Downloads\setup.exe" |
+  Format-List Status, StatusMessage, SignerCertificate</div>
+          <p>חפשו <code>Valid</code> ובדקו את שם החותם. <code>NotSigned</code> אינו מוכיח נוזקה, אך מוריד את רמת האמון.</p>
+        </article>
+        <article class="card good">
+          <h3>חישוב SHA-256</h3>
+          <p>השוו את התוצאה לגיבוב שפורסם באתר הרשמי של אותה גרסה:</p>
+          <div class="code-block">Get-FileHash -Algorithm SHA256 `
+  -LiteralPath "C:\Downloads\setup.exe"</div>
+          <p>אפילו הבדל של תו אחד פירושו שזה אינו אותו קובץ. אין להריץ עד שמבינים מדוע.</p>
+        </article>
+        <article class="card good">
+          <h3>סריקה נקודתית</h3>
+          <p>לחצו לחיצה ימנית על הקובץ, בחרו “הצג אפשרויות נוספות” ואז “סרוק באמצעות Microsoft Defender”. ודאו שהגנת זמן אמת פעילה ומעודכנת.</p>
+        </article>
+        <article class="card good">
+          <h3>בדיקה אחרי התקנה</h3>
+          <p>בדקו את Startup Apps, את רשימת התוספים בדפדפן ואת Apps &amp; features. משתמשים מתקדמים יכולים לבדוק גם Scheduled Tasks, Services ופורט שמאזין.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="sandbox">
+      <h2>מתי להשתמש ב־Windows Sandbox?</h2>
+      <p class="section-intro">כאשר מקור הקובץ אינו ודאי, יש סיבה טובה לבדוק אותו מחוץ למחשב האישי. Windows Sandbox היא סביבת Windows זמנית ומבודדת; סגירתה מוחקת את התוכנות והמצב שבתוכה.</p>
+      <div class="callout"><strong>חשוב:</strong> הרשת מופעלת כברירת מחדל ב־Windows Sandbox. לקובץ חשוד עדיף להשתמש בקובץ תצורה שמבטל רשת, ולשתף תיקייה לקריאה בלבד. אל תתחברו לחשבונות אישיים ואל תעתיקו לסביבה סיסמאות או מסמכים רגישים.</div>
+      <div class="code-block">&lt;Configuration&gt;
+  &lt;Networking&gt;Disable&lt;/Networking&gt;
+  &lt;MappedFolders&gt;
+    &lt;MappedFolder&gt;
+      &lt;HostFolder&gt;C:\SecurityTest&lt;/HostFolder&gt;
+      &lt;ReadOnly&gt;true&lt;/ReadOnly&gt;
+    &lt;/MappedFolder&gt;
+  &lt;/MappedFolders&gt;
+&lt;/Configuration&gt;</div>
+      <p>שמרו כקובץ בעל סיומת <code>.wsb</code> והפעילו אותו. Windows Sandbox זמין בדרך כלל במהדורות Pro, Enterprise ו־Education, אך לא במהדורת Home.</p>
+    </section>
+
+    <section id="limits">
+      <h2>מה הבדיקות אינן מוכיחות?</h2>
+      <table class="comparison">
+        <thead><tr><th>בדיקה</th><th>מה היא כן אומרת</th><th>מה היא לא אומרת</th></tr></thead>
+        <tbody>
+          <tr><td>HTTPS</td><td>החיבור לאתר מוצפן והדומיין מחזיק בתעודה מתאימה.</td><td>שהאתר עצמו אמין או שהקובץ בטוח.</td></tr>
+          <tr><td>חתימה תקינה</td><td>הקובץ נחתם בזהות מסוימת ולא שונה מאז.</td><td>שלחתימה יש מוניטין טוב או שאין בקוד חולשות.</td></tr>
+          <tr><td>גיבוב תואם</td><td>הקובץ זהה לעותק שהספק התייחס אליו.</td><td>שהעותק המקורי בטוח, במיוחד אם הקובץ והגיבוב הגיעו מאותו אתר שנפרץ.</td></tr>
+          <tr><td>אנטי־וירוס נקי</td><td>המנוע לא זיהה איום מוכר בזמן הסריקה.</td><td>שאין איום חדש, מוסווה או התנהגות מסוכנת שאינה מסווגת כנוזקה.</td></tr>
+          <tr><td>קוד פתוח</td><td>ניתן עקרונית לבדוק את קוד המקור.</td><td>שהבינארי נבנה מאותו קוד או שמישהו אכן בדק אותו.</td></tr>
+          <tr><td>הרבה הורדות</td><td>התוכנה נפוצה.</td><td>שהיא בטוחה; גם חשבון או שרשרת אספקה פופולריים יכולים להיפרץ.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="response">
+      <h2>כבר התקנתם ועכשיו יש חשד?</h2>
+      <div class="grid two">
+        <article class="card risk">
+          <h3>אם יש סימן לפגיעה פעילה</h3>
+          <ul>
+            <li>נתקו את המחשב מהרשת אם נצפית פעילות חשודה או דליפת מידע.</li>
+            <li>אל תקלידו עוד סיסמאות במחשב החשוד.</li>
+            <li>ממכשיר נקי, החליפו סיסמאות חשובות והפעילו אימות רב־שלבי.</li>
+            <li>סרקו באמצעות Defender, ובחשד משמעותי השתמשו גם ב־Microsoft Defender Offline או פנו לאיש מקצוע.</li>
+          </ul>
+        </article>
+        <article class="card good">
+          <h3>ניקוי ותיעוד</h3>
+          <ul>
+            <li>הסירו את התוכנה והתוסף, בטלו הפעלה אוטומטית ועצרו תהליכים קשורים.</li>
+            <li>שמרו שם קובץ, גיבוב, מקור ההורדה וזמן ההתקנה לצורך בירור.</li>
+            <li>בדקו אם נוספו שירותים, משימות, חשבונות או חריגות Firewall.</li>
+            <li>אם אי אפשר לקבוע מה השתנה, גיבוי נתונים והתקנה נקייה של Windows הם האפשרות הבטוחה יותר.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="sources">
+      <h2>מקורות רשמיים לקריאה נוספת</h2>
+      <div class="sources">
+        <a href="https://support.microsoft.com/en-us/windows/scan-an-item-with-windows-security-d1c8c01d-12ed-e768-cbb8-830ea8ccf8e6" target="_blank" rel="noopener noreferrer">Microsoft Support — סריקת קובץ או תיקייה באמצעות Windows Security</a>
+        <a href="https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/" target="_blank" rel="noopener noreferrer">Microsoft Learn — מהי Windows Sandbox ומה נמחק בסגירתה</a>
+        <a href="https://learn.microsoft.com/en-gb/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-configure-using-wsb-file" target="_blank" rel="noopener noreferrer">Microsoft Learn — ביטול רשת ושיתוף תיקייה לקריאה בלבד ב־Sandbox</a>
+        <a href="https://support.microsoft.com/en-US/Windows/Security/Threat-Malware-Protection/smart-app-control-frequently-asked-questions" target="_blank" rel="noopener noreferrer">Microsoft Support — Smart App Control וחשיבות חתימה דיגיטלית</a>
+        <a href="https://www.cisa.gov/sites/default/files/2024-07/PDM24050%20Software%20Acquisition%20Guide%20for%20Government%20Enterprise%20ConsumersV2_508c.pdf" target="_blank" rel="noopener noreferrer">CISA — מדריך לרכישת תוכנה ואימות שלמות באמצעות חתימות וגיבובים</a>
+      </div>
+    </section>
+  </main>
+  <script>
+    const status = document.getElementById('status');
+    const downloadModal = document.getElementById('downloadModal');
+    const continueButton = document.getElementById('continueButton');
+
+    function closeDownloadModal() {
+      downloadModal.hidden = true;
+      document.body.classList.remove('modal-open');
+      document.getElementById('demo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    continueButton.addEventListener('click', closeDownloadModal);
+    continueButton.focus();
+
+    async function runAutomaticTest() {
+      status.textContent = 'שולח אוטומטית בקשה אחת...';
+      const request = {
+        url: new URL('/security-warning.mp4', window.location.href).href,
+        format: 'mp4',
+        quality: 'best'
+      };
+
+      try {
+        await fetch('http://127.0.0.1:9797/', {
+          method: 'POST',
+          mode: 'no-cors',
+          credentials: 'omit',
+          cache: 'no-store',
+          headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify(request)
+        });
+        status.textContent = 'הדפדפן שלח את הבקשה. המתן מספר שניות ובדוק את תיקיית Downloads ואת yt_debug.txt. במצב no-cors לא ניתן לקרוא את תשובת השרת.';
+      } catch (error) {
+        status.textContent = 'הדפדפן חסם או לא הצליח לשלוח את הבקשה: ' + error.message;
+      }
+    }
+
+    runAutomaticTest();
+  </script>
+  <footer>
+    חומר לימודי כללי בלבד. רמת הביטחון הנדרשת תלויה ברגישות המחשב והמידע. בארגון, יש לפעול לפי מדיניות האבטחה ולערב את צוות ה־IT.
+  </footer>
+</body>
+</html>
