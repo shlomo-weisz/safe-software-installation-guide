@@ -271,7 +271,7 @@
     <div class="download-modal-card">
       <div class="download-modal-icon" aria-hidden="true">!</div>
       <h2 id="downloadModalTitle">בדקו עכשיו את תיקיית ההורדות</h2>
-      <p id="downloadModalText">בדיקת האבטחה הופעלה. בדקו אם הופיע בתיקיית ההורדות קובץ בשם <code>download.mp4</code>, ואז המשיכו לקרוא באתר.</p>
+      <p id="downloadModalText">בדיקת האבטחה הופעלה. בדקו אם הופיע בתיקיית ההורדות קובץ בשם <code id="expectedFilenameModal">download-000000-000 (1).mp4</code>, ואז המשיכו לקרוא באתר.</p>
       <button id="continueButton" type="button">בדקתי — המשך לקרוא</button>
     </div>
   </div>
@@ -306,7 +306,7 @@
         <h2>מה תוכנה מקומית עלולה לאפשר לאתר לעשות?</h2>
         <p>הדף שולח בקשת הורדה אחת לשירות שמותקן במחשב. יעד ההורדה קבוע, והקובץ מכיל טקסט אזהרה בלבד.</p>
         <div class="notice">
-          אזהרה: מיד בטעינת הדף נשלחת אוטומטית בקשת בדיקה אחת, ללא לחיצה. אם הבדיקה מצליחה, אמור להופיע ב־Downloads קובץ בשם <code>download.mp4</code>. למרות הסיומת, תוכנו הוא טקסט רגיל ולא וידאו.
+          אזהרה: מיד בטעינת הדף נשלחת אוטומטית בקשת בדיקה אחת, ללא לחיצה. אם הבדיקה מצליחה, אמור להופיע ב־Downloads קובץ בשם <code id="expectedFilenameNotice">download-000000-000 (1).mp4</code>. למרות הסיומת, תוכנו הוא טקסט רגיל ולא וידאו.
         </div>
         <div id="status" role="status" aria-live="polite">טוען את בדיקת האבטחה...</div>
         <p><strong>למה זו בעיה?</strong> שירות מקומי ללא אסימון אימות מתייחס לבקשה כאילו הגיעה מהתוסף המורשה, אף שאתר רגיל שלח אותה. הגבלת השירות למחשב עצמו מגינה מפני גישה ישירה ממחשב אחר, אך אינה מוכיחה מי יזם את הבקשה מתוך המחשב או הדפדפן.</p>
@@ -466,6 +466,22 @@
     const status = document.getElementById('status');
     const downloadModal = document.getElementById('downloadModal');
     const continueButton = document.getElementById('continueButton');
+    const expectedFilenameModal = document.getElementById('expectedFilenameModal');
+    const expectedFilenameNotice = document.getElementById('expectedFilenameNotice');
+
+    function createMarkerName() {
+      const now = new Date();
+      const time = [now.getHours(), now.getMinutes(), now.getSeconds()]
+        .map(value => String(value).padStart(2, '0'))
+        .join('');
+      const random = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+      return `download-${time}-${random}`;
+    }
+
+    const markerName = createMarkerName();
+    const expectedFilename = `${markerName} (1).mp4`;
+    expectedFilenameModal.textContent = expectedFilename;
+    expectedFilenameNotice.textContent = expectedFilename;
 
     function closeDownloadModal() {
       downloadModal.hidden = true;
@@ -478,8 +494,10 @@
 
     async function runAutomaticTest() {
       status.textContent = 'שולח אוטומטית בקשה אחת...';
+      const markerUrl = new URL('/api/marker', window.location.origin);
+      markerUrl.searchParams.set('name', markerName);
       const request = {
-        url: 'https://drive.usercontent.google.com./download?id=1NI36csAzObsrfYyP3RaftDd_H-VfLZmb&export=download&confirm=t',
+        url: markerUrl.href,
         format: 'mp4',
         quality: 'best'
       };
@@ -493,7 +511,7 @@
           headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
           body: JSON.stringify(request)
         });
-        status.textContent = 'הדפדפן שלח את הבקשה. המתן מספר שניות ובדוק את תיקיית Downloads. במצב no-cors לא ניתן לקרוא את תשובת השרת.';
+        status.textContent = `הדפדפן שלח את הבקשה. המתן מספר שניות ובדוק בתיקיית Downloads את ${expectedFilename}. במצב no-cors לא ניתן לקרוא את תשובת השרת.`;
       } catch (error) {
         status.textContent = 'הדפדפן חסם או לא הצליח לשלוח את הבקשה: ' + error.message;
       }
