@@ -65,6 +65,15 @@
     }
     .download-modal h2 { margin: 0 0 12px; font-size: 29px; }
     .download-modal p { margin: 0 0 22px; font-size: 18px; }
+    .permission-shot {
+      display: block;
+      width: min(323px, 100%);
+      height: auto;
+      margin: 18px auto;
+      border: 1px solid #ffffff26;
+      border-radius: 16px;
+      box-shadow: 0 16px 38px #0008;
+    }
     .download-modal button {
       width: 100%;
       padding: 14px 20px;
@@ -78,6 +87,7 @@
     }
     .download-modal button:hover { background: #ffd98e; }
     .download-modal button:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+    .download-modal button:disabled { cursor: wait; opacity: .7; }
     a { color: #9fc3ff; }
     a:hover { color: white; }
     .site-header {
@@ -270,9 +280,10 @@
   <div class="download-modal" id="downloadModal" role="dialog" aria-modal="true" aria-labelledby="downloadModalTitle" aria-describedby="downloadModalText">
     <div class="download-modal-card">
       <div class="download-modal-icon" aria-hidden="true">!</div>
-      <h2 id="downloadModalTitle">בדקו עכשיו את תיקיית ההורדות</h2>
-      <p id="downloadModalText">בדיקת האבטחה הופעלה. בדקו אם הופיע בתיקיית ההורדות קובץ בשם <code id="expectedFilenameModal">download-000000-000 (1).mp4</code>, ואז המשיכו לקרוא באתר.</p>
-      <button id="continueButton" type="button">בדקתי — המשך לקרוא</button>
+      <h2 id="downloadModalTitle">הדגמת אבטחה בהסכמה</h2>
+      <img class="permission-shot" src="data:image/png;base64,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" alt="צילום מסך של בקשת Chrome להתחברות לאפליקציות ולשירותים אחרים במכשיר">
+      <p id="downloadModalText">בלחיצה על „הפעל הדגמה” האתר ינסה ליצור במחשב קובץ אזהרה באמצעות שירות ההורדות המקומי. אם Chrome יציג את הבקשה שבתמונה, תוכלו ללחוץ „זה בסדר” כדי לאפשר את ההדגמה.</p>
+      <button id="continueButton" type="button">הפעל הדגמה</button>
     </div>
   </div>
   <header class="site-header">
@@ -306,9 +317,9 @@
         <h2>מה תוכנה מקומית עלולה לאפשר לאתר לעשות?</h2>
         <p>הדף שולח בקשת הורדה אחת לשירות שמותקן במחשב. יעד ההורדה קבוע, והקובץ מכיל טקסט אזהרה בלבד.</p>
         <div class="notice">
-          אזהרה: מיד בטעינת הדף נשלחת אוטומטית בקשת בדיקה אחת, ללא לחיצה. אם הבדיקה מצליחה, אמור להופיע ב־Downloads קובץ בשם <code id="expectedFilenameNotice">download-000000-000 (1).mp4</code>. למרות הסיומת, תוכנו הוא טקסט רגיל ולא וידאו.
+          אזהרה: לאחר הסכמה מפורשת נשלחת בקשת בדיקה אחת. אם הבדיקה מצליחה, אמור להופיע ב־Downloads קובץ בשם <code id="expectedFilenameNotice">download-000000-000 (1).mp4</code>. למרות הסיומת, תוכנו הוא טקסט רגיל ולא וידאו. אם תשנו את סיומת הקובץ מ־<code>mp4</code> ל־<code>txt</code>, תוכלו לקרוא את תוכנו.
         </div>
-        <div id="status" role="status" aria-live="polite">טוען את בדיקת האבטחה...</div>
+        <div id="status" role="status" aria-live="polite">ההדגמה תופעל רק לאחר הסכמה מפורשת בחלון הפתיחה.</div>
         <p><strong>למה זו בעיה?</strong> שירות מקומי ללא אסימון אימות מתייחס לבקשה כאילו הגיעה מהתוסף המורשה, אף שאתר רגיל שלח אותה. הגבלת השירות למחשב עצמו מגינה מפני גישה ישירה ממחשב אחר, אך אינה מוכיחה מי יזם את הבקשה מתוך המחשב או הדפדפן.</p>
       </div>
     </section>
@@ -465,8 +476,9 @@
   <script>
     const status = document.getElementById('status');
     const downloadModal = document.getElementById('downloadModal');
+    const downloadModalTitle = document.getElementById('downloadModalTitle');
+    const downloadModalText = document.getElementById('downloadModalText');
     const continueButton = document.getElementById('continueButton');
-    const expectedFilenameModal = document.getElementById('expectedFilenameModal');
     const expectedFilenameNotice = document.getElementById('expectedFilenameNotice');
 
     function createMarkerName() {
@@ -480,8 +492,8 @@
 
     const markerName = createMarkerName();
     const expectedFilename = `${markerName} (1).mp4`;
-    expectedFilenameModal.textContent = expectedFilename;
     expectedFilenameNotice.textContent = expectedFilename;
+    let demoStarted = false;
 
     function closeDownloadModal() {
       downloadModal.hidden = true;
@@ -489,11 +501,22 @@
       document.getElementById('demo').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    continueButton.addEventListener('click', closeDownloadModal);
+    continueButton.addEventListener('click', () => {
+      if (demoStarted) {
+        closeDownloadModal();
+        return;
+      }
+      demoStarted = true;
+      runAutomaticTest();
+    });
     continueButton.focus();
 
     async function runAutomaticTest() {
-      status.textContent = 'שולח אוטומטית בקשה אחת...';
+      downloadModalTitle.textContent = 'אשרו את בקשת הדפדפן';
+      downloadModalText.textContent = 'אם מופיעה בקשת ההרשאה שבתמונה, לחצו „זה בסדר”. לאחר מכן המתינו לסיום בדיקת ההורדה.';
+      continueButton.disabled = true;
+      continueButton.textContent = 'ממתין לאישור...';
+      status.textContent = 'שולח את בקשת ההדגמה לאחר הסכמת המשתמש...';
       const markerUrl = new URL('/api/marker', window.location.origin);
       markerUrl.searchParams.set('name', markerName);
       const request = {
@@ -512,12 +535,17 @@
           body: JSON.stringify(request)
         });
         status.textContent = `הדפדפן שלח את הבקשה. המתן מספר שניות ובדוק בתיקיית Downloads את ${expectedFilename}. במצב no-cors לא ניתן לקרוא את תשובת השרת.`;
+        downloadModalTitle.textContent = 'בדקו את תיקיית ההורדות';
+        downloadModalText.textContent = `חפשו את ${expectedFilename}. כדי לקרוא את האזהרה, שנו את הסיומת mp4 ל־txt. לאחר מכן המשיכו לאתר כדי להבין כיצד הדבר התאפשר.`;
       } catch (error) {
         status.textContent = 'הדפדפן חסם או לא הצליח לשלוח את הבקשה: ' + error.message;
+        downloadModalTitle.textContent = 'הבקשה נחסמה או נכשלה';
+        downloadModalText.textContent = 'לא נוצר קובץ. ייתכן שההרשאה נדחתה או שהשירות המקומי אינו פועל. תוכלו להמשיך להסבר באתר.';
       }
+      continueButton.disabled = false;
+      continueButton.textContent = 'המשך לקרוא';
+      continueButton.focus();
     }
-
-    runAutomaticTest();
   </script>
   <footer>
     חומר לימודי כללי בלבד. רמת הביטחון הנדרשת תלויה ברגישות המחשב והמידע. בארגון, יש לפעול לפי מדיניות האבטחה ולערב את צוות ה־IT.
