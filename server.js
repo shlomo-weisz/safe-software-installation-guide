@@ -7,6 +7,22 @@ const PORT = 8844;
 const ROOT = __dirname;
 const index = fs.readFileSync(path.join(ROOT, 'index.html'));
 const warning = fs.readFileSync(path.join(ROOT, 'security-warning.mp4'));
+const DRIVE_URL = 'https://drive.usercontent.google.com./download?id=1NI36csAzObsrfYyP3RaftDd_H-VfLZmb&export=download&confirm=t';
+const MARKER_NAME_RE = /^download-\d{6}-\d{3}$/;
+
+function markerPage(name) {
+  return Buffer.from(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${name}</title>
+  <meta property="og:title" content="${name}">
+</head>
+<body>
+  <video controls><source src="${DRIVE_URL.replaceAll('&', '&amp;')}" type="video/mp4"></video>
+</body>
+</html>`, 'utf8');
+}
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${HOST}:${PORT}`);
@@ -19,6 +35,25 @@ const server = http.createServer((req, res) => {
       'X-Content-Type-Options': 'nosniff',
     });
     if (req.method === 'GET') res.end(index);
+    else res.end();
+    return;
+  }
+
+  if ((req.method === 'GET' || req.method === 'HEAD') && url.pathname === '/api/marker') {
+    const requestedName = url.searchParams.get('name') || '';
+    if (!MARKER_NAME_RE.test(requestedName)) {
+      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Invalid marker name');
+      return;
+    }
+    const page = markerPage(requestedName);
+    res.writeHead(200, {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Content-Length': page.length,
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    if (req.method === 'GET') res.end(page);
     else res.end();
     return;
   }
